@@ -808,6 +808,10 @@ body::after {
       <label class="toggle-wrap"><input type="checkbox" id="togVibrate" checked onchange="saveSettings()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
     </div>
     <div class="notif-row">
+      <div><div class="notif-label">🔊 Whistle sound</div><div class="notif-sub">Play Audio.mp3 at segment end</div></div>
+      <label class="toggle-wrap"><input type="checkbox" id="togSound" checked onchange="saveSettings()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div class="notif-row">
       <div><div class="notif-label">⚠️ 5-min warning</div><div class="notif-sub">Alert 5 minutes before end of segment</div></div>
       <label class="toggle-wrap"><input type="checkbox" id="tog5min" checked onchange="saveSettings()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
     </div>
@@ -1121,6 +1125,7 @@ function onSegmentEnd() {
   if (document.getElementById('togSegEnd').checked) {
     doNotif('🔔 ' + sn + ' ' + state.currentSeg + ' Over!', 'Score: ' + nameA() + ' ' + state.scoreA + ' – ' + state.scoreB + ' ' + nameB());
     doVibrate([500, 200, 500, 200, 500]);
+    doSound();
   }
   if (state.currentSeg < state.totalSegs) {
     showOverlay(sn + ' Time', sn + ' ' + state.currentSeg + ' complete', false);
@@ -1411,6 +1416,7 @@ function showOverlay(title, sub, isFull) {
 }
 
 function dismissOverlay() {
+  stopSound();
   document.getElementById('overlay').classList.remove('show');
   if (state.currentSeg <= state.totalSegs && !state.matchOver) {
     state.timeLeft = state.countUp ? 0 : state.segDuration;
@@ -1451,6 +1457,22 @@ function doVibrate(pattern) {
   if (document.getElementById('togVibrate') && document.getElementById('togVibrate').checked) {
     if ('vibrate' in navigator) navigator.vibrate(pattern);
   }
+}
+
+const whistleAudio = new Audio('./Audio.mp3');
+whistleAudio.preload = 'auto';
+whistleAudio.loop = true;
+
+function doSound() {
+  if (document.getElementById('togSound') && document.getElementById('togSound').checked) {
+    whistleAudio.currentTime = 0;
+    whistleAudio.play().catch(() => {});
+  }
+}
+
+function stopSound() {
+  whistleAudio.pause();
+  whistleAudio.currentTime = 0;
 }
 
 function requestNotifPermission() {

@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0f1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Refly — Junior football referee assistant">
+<title>Refly · Referee</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #080d1a;
+  --bg2:      #0d1525;
+  --bg3:      #131f33;
+  --surface:  #182540;
+  --surface2: #1e2e4a;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.13);
+  --border3:  rgba(255,255,255,0.2);
+  --green:    #00e5a0;
+  --green2:   #00b87d;
+  --green3:   rgba(0,229,160,0.08);
+  --amber:    #ffb800;
+  --red:      #ff4545;
+  --blue:     #4a9eff;
+  --text:     #ffffff;
+  --text2:    rgba(255,255,255,0.65);
+  --text3:    rgba(255,255,255,0.35);
+  --text4:    rgba(255,255,255,0.18);
+  --font-d:   'Barlow Condensed', sans-serif;
+  --font-b:   'Barlow', sans-serif;
+  --r:        14px;
+  --r2:       9px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --glow: 0 0 20px rgba(0,229,160,0.2);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html { background: var(--bg); }
+
+body {
+  font-family: var(--font-b);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 88px;
+  overscroll-behavior: none;
+  position: relative;
+}
+
+/* ── BACKGROUND ATMOSPHERE ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 90% 50% at 50% -5%, rgba(0,229,160,0.11) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 35% at 90% 100%, rgba(74,158,255,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 0% 60%, rgba(0,229,160,0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+
+/* Subtle noise texture overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0; opacity: 0.4;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 16px 10px;
+  position: relative; z-index: 1;
+}
+
+.logo-wrap {
+  display: flex; align-items: center; gap: 9px;
+}
+
+/* Inline SVG whistle logo */
+.logo-icon {
+  width: 32px; height: 32px;
+  position: relative; flex-shrink: 0;
+}
+.logo-icon img {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.logo {
+  font-family: var(--font-d);
+  font-size: 28px; font-weight: 900;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #00e5a0 0%, #5affcb 50%, #00b87d 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+
+.logo-sub {
+  font-family: var(--font-d);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--text3); margin-top: 1px;
+}
+
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+
+.install-btn {
+  font-family: var(--font-b); font-size: 11px; font-weight: 600;
+  background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.25);
+  color: var(--green); border-radius: 20px; padding: 5px 12px;
+  cursor: pointer; display: none;
+  transition: all .2s;
+  letter-spacing: 0.02em;
+}
+.install-btn:active { background: rgba(0,229,160,0.2); transform: scale(0.96); }
+
+.offline-badge {
+  font-size: 10px; font-weight: 600;
+  background: rgba(255,184,0,0.1); border: 1px solid rgba(255,184,0,0.25);
+  color: var(--amber); border-radius: 20px; padding: 4px 10px;
+  display: none; letter-spacing: 0.05em;
+}
+
+/* ── TAB BAR ── */
+.tab-bar {
+  display: flex; gap: 3px;
+  padding: 8px 16px 0;
+  position: relative; z-index: 1;
+}
+
+.tab {
+  flex: 1;
+  font-family: var(--font-d); font-size: 12px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  color: var(--text3); border-radius: var(--r2); padding: 9px 4px;
+  cursor: pointer; transition: all .2s;
+  position: relative; overflow: hidden;
+}
+
+.tab::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%);
+  opacity: 0; transition: opacity .2s;
+}
+.tab:hover::before { opacity: 1; }
+
+.tab.active {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--bg);
+  box-shadow: 0 0 20px rgba(0,229,160,0.35), 0 2px 8px rgba(0,0,0,0.3);
+  font-weight: 900;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; padding: 10px 16px; position: relative; z-index: 1; }
+.screen.active { display: block; animation: screenIn .2s ease; }
+
+@keyframes screenIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* ── GLASS CARDS ── */
+.card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 40%, rgba(0,229,160,0.2) 60%, transparent 100%);
+}
+
+.card-title {
+  font-family: var(--font-d); font-size: 10px; font-weight: 800;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text4); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+.card-title::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--border2), transparent);
+}
+
+/* ── SEGMENT PIPS ── */
+.seg-row { display: flex; gap: 5px; margin-bottom: 12px; }
+
+.seg-pip {
+  flex: 1; height: 3px; border-radius: 2px;
+  background: rgba(255,255,255,0.07); transition: all .35s ease;
+}
+.seg-pip.done { background: var(--green2); }
+.seg-pip.active {
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green), 0 0 16px rgba(0,229,160,0.3);
+  position: relative; overflow: hidden;
+}
+.seg-pip.active::after {
+  content: ''; position: absolute; top:0; left:-100%; width:100%; height:100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  animation: shimmer 1.8s infinite;
+}
+@keyframes shimmer { to { left: 200%; } }
+
+.seg-meta {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.seg-label {
+  font-family: var(--font-d); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3);
+}
+
+/* ── SCOREBOARD ── */
+.score-grid {
+  display: grid; grid-template-columns: 1fr 48px 1fr; gap: 8px; align-items: center;
+}
+
+.team-col { text-align: center; }
+
+.team-name-input {
+  font-family: var(--font-d); font-size: 15px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text3); background: transparent; border: none;
+  text-align: center; width: 100%; outline: none;
+  padding: 3px 0;
+  border-bottom: 1px solid transparent; transition: all .25s;
+}
+.team-name-input:focus {
+  border-bottom-color: var(--green);
+  color: var(--text);
+}
+
+.score-display {
+  font-family: var(--font-d); font-size: 76px; font-weight: 900;
+  color: var(--text); line-height: 1; text-align: center;
+  margin: 2px 0; letter-spacing: -3px;
+  transition: transform .1s;
+  text-shadow: 0 0 40px rgba(0,229,160,0.1);
+}
+.score-display.bump { transform: scale(1.12); }
+
+.score-btns { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+
+.score-btn {
+  width: 40px; height: 40px; border-radius: 10px;
+  border: 1px solid var(--border2);
+  background: rgba(255,255,255,0.04);
+  color: var(--text); font-size: 22px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .12s;
+  font-family: var(--font-d); font-weight: 800;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.score-btn.plus { border-color: rgba(0,229,160,0.35); color: var(--green); }
+.score-btn.plus:active {
+  background: rgba(0,229,160,0.15);
+  transform: scale(0.9);
+  box-shadow: 0 0 12px rgba(0,229,160,0.25);
+}
+.score-btn.minus:active { background: rgba(255,69,69,0.1); transform: scale(0.9); }
+
+.vs-col {
+  font-family: var(--font-d); font-size: 18px; font-weight: 700;
+  color: var(--text4); text-align: center;
+  letter-spacing: 0.05em;
+}
+
+/* ── TIMER ── */
+.timer-wrap { text-align: center; margin-bottom: 14px; }
+
+.timer-big {
+  font-family: var(--font-d); font-size: 84px; font-weight: 900;
+  letter-spacing: -4px; line-height: 1;
+  color: var(--text);
+  transition: color .3s;
+  text-shadow: 0 0 60px rgba(0,229,160,0.08);
+}
+.timer-big.warning { color: var(--amber); animation: pulse-amber 0.9s infinite; }
+.timer-big.overtime { color: var(--red); text-shadow: 0 0 30px rgba(255,69,69,0.3); }
+
+@keyframes pulse-amber {
+  0%,100%{ opacity:1; text-shadow: 0 0 30px rgba(255,184,0,0.2); }
+  50%{ opacity:0.65; text-shadow: none; }
+}
+
+.timer-sub {
+  font-family: var(--font-d); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.15em; color: var(--text3); margin-top: 2px;
+  text-transform: uppercase;
+}
+
+.timer-controls { display: flex; gap: 7px; justify-content: center; }
+
+.tc-btn {
+  font-family: var(--font-d); font-size: 13px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  border-radius: 10px; padding: 11px 14px;
+  border: 1px solid var(--border2); cursor: pointer;
+  transition: all .15s;
+  flex: 1; max-width: 120px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  position: relative; overflow: hidden;
+}
+.tc-btn:active { transform: scale(0.94); }
+
+.tc-start {
+  background: rgba(0,229,160,0.1); border-color: rgba(0,229,160,0.4); color: var(--green);
+}
+.tc-start:hover {
+  background: rgba(0,229,160,0.18);
+  box-shadow: 0 0 20px rgba(0,229,160,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.tc-pause { background: rgba(255,184,0,0.08); border-color: rgba(255,184,0,0.35); color: var(--amber); }
+.tc-next  { background: rgba(74,158,255,0.08); border-color: rgba(74,158,255,0.35); color: var(--blue); }
+.tc-added { background: rgba(255,69,69,0.08); border-color: rgba(255,69,69,0.3); color: var(--red); font-size: 11px; }
+
+/* ── PRESET CHIPS ── */
+.preset-scroll {
+  display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.preset-scroll::-webkit-scrollbar { display: none; }
+
+.preset-chip {
+  flex-shrink: 0;
+  font-family: var(--font-d); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border2);
+  color: var(--text3); border-radius: 20px; padding: 7px 14px;
+  cursor: pointer; white-space: nowrap; transition: all .15s;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.preset-chip:hover { border-color: rgba(0,229,160,0.3); color: var(--text2); }
+.preset-chip:active, .preset-chip.selected {
+  background: rgba(0,229,160,0.12); border-color: var(--green);
+  color: var(--green); box-shadow: 0 0 10px rgba(0,229,160,0.15);
+}
+
+/* ── SETTINGS ── */
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
+.setting-row {
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 10px 12px;
+  transition: border-color .2s;
+}
+.setting-row:focus-within { border-color: rgba(0,229,160,0.3); }
+
+.setting-label {
+  font-family: var(--font-d); font-size: 9px; font-weight: 800;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--text4);
+  margin-bottom: 5px;
+}
+
+.setting-val {
+  display: flex; align-items: center; gap: 6px;
+}
+.setting-val input[type=number] {
+  width: 52px; font-family: var(--font-d); font-size: 24px; font-weight: 900;
+  background: transparent; border: none; color: var(--text);
+  text-align: center; outline: none;
+}
+.setting-val select {
+  width: 100%; font-family: var(--font-b); font-size: 13px;
+  background: var(--bg3); border: 1px solid var(--border2); color: var(--text);
+  border-radius: 6px; padding: 5px 8px; outline: none;
+  cursor: pointer;
+}
+.setting-val .unit { font-size: 11px; color: var(--text3); font-family: var(--font-d); font-weight: 700; }
+.setting-row.full { grid-column: 1 / -1; }
+
+/* ── CARDS SCREEN ── */
+.cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.team-cards-name {
+  font-family: var(--font-d); font-size: 12px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text2); margin-bottom: 9px; text-align: center;
+}
+
+.card-action-btns { display: flex; gap: 5px; margin-bottom: 7px; }
+
+.card-action-btn {
+  flex: 1; height: 46px; border-radius: 9px; border: none;
+  cursor: pointer; font-family: var(--font-d); font-size: 11px; font-weight: 800;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; transition: all .12s;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.card-action-btn:active { transform: scale(0.93); }
+
+.btn-yellow { background: rgba(255,184,0,0.1); border: 1px solid rgba(255,184,0,0.3); color: #ffb800; }
+.btn-yellow:hover { background: rgba(255,184,0,0.18); box-shadow: 0 0 12px rgba(255,184,0,0.2); }
+.btn-red    { background: rgba(255,69,69,0.1); border: 1px solid rgba(255,69,69,0.3); color: #ff4545; }
+.btn-red:hover { background: rgba(255,69,69,0.18); }
+.btn-blue-c { background: rgba(74,158,255,0.1); border: 1px solid rgba(74,158,255,0.3); color: #4a9eff; }
+
+.card-tallies { display: flex; gap: 5px; }
+.card-tally {
+  flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 7px; padding: 6px 4px; text-align: center;
+}
+.card-tally .num {
+  font-family: var(--font-d); font-size: 24px; font-weight: 900; color: var(--text); line-height: 1;
+}
+.card-tally .lbl { font-size: 8px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 1px; }
+
+/* ── TOGGLES ── */
+.notif-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 0;
+}
+.notif-row + .notif-row { border-top: 1px solid rgba(255,255,255,0.05); }
+.notif-label { font-size: 13px; color: var(--text2); font-weight: 500; }
+.notif-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+.toggle-wrap { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+.toggle-wrap input { opacity:0; width:0; height:0; position:absolute; }
+.toggle-track {
+  position: absolute; inset: 0; border-radius: 12px;
+  background: rgba(255,255,255,0.08); border: 1px solid var(--border2);
+  cursor: pointer; transition: all .25s;
+}
+.toggle-wrap input:checked + .toggle-track { background: var(--green); border-color: var(--green); box-shadow: 0 0 12px rgba(0,229,160,0.3); }
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%; background: white;
+  transition: transform .25s; pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+.toggle-wrap input:checked ~ .toggle-thumb { transform: translateX(18px); }
+
+/* ── EVENT LOG ── */
+.log-list { max-height: 220px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--surface2) transparent; }
+.log-item {
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  animation: fadeIn .22s ease;
+}
+@keyframes fadeIn { from { opacity:0; transform: translateY(-3px) } to { opacity:1; transform: none } }
+.log-time {
+  font-family: var(--font-d); font-size: 10px; font-weight: 800;
+  color: var(--text3); min-width: 48px; flex-shrink: 0;
+  letter-spacing: 0.06em;
+}
+.log-text { font-size: 12px; color: var(--text2); flex: 1; line-height: 1.45; }
+.log-empty { font-size: 12px; color: var(--text3); text-align: center; padding: 20px 0; }
+
+.log-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 10px; }
+.log-act-btn {
+  font-family: var(--font-d); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border2);
+  color: var(--text3); border-radius: 7px; padding: 6px 12px;
+  cursor: pointer; transition: all .15s;
+}
+.log-act-btn:hover { border-color: var(--border3); color: var(--text2); }
+
+/* ── MATCH STATUS BANNER ── */
+.match-status {
+  display: none;
+  background: linear-gradient(135deg, rgba(0,229,160,0.1), rgba(74,158,255,0.06));
+  border: 1px solid rgba(0,229,160,0.2);
+  border-radius: var(--r2);
+  padding: 8px 14px; margin-bottom: 10px;
+  font-family: var(--font-d); font-size: 12px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--green);
+  text-align: center;
+}
+.match-status.show { display: block; animation: fadeIn .3s ease; }
+
+/* ── HALFTIME OVERLAY ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(8,13,26,0.96);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 100; opacity: 0; pointer-events: none; transition: opacity .35s;
+}
+.overlay.show { opacity: 1; pointer-events: all; }
+.overlay-icon { font-size: 60px; margin-bottom: 10px; }
+.overlay-title {
+  font-family: var(--font-d); font-size: 52px; font-weight: 900;
+  letter-spacing: -1px; color: var(--text); margin-bottom: 4px;
+}
+.overlay-sub { font-size: 15px; color: var(--text2); margin-bottom: 10px; }
+.overlay-score {
+  font-family: var(--font-d); font-size: 60px; font-weight: 900;
+  color: var(--green); letter-spacing: -2px; margin-bottom: 28px;
+  text-shadow: 0 0 40px rgba(0,229,160,0.4);
+}
+.overlay-dismiss {
+  font-family: var(--font-d); font-size: 14px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--green); color: var(--bg);
+  border: none; border-radius: 12px; padding: 13px 36px;
+  cursor: pointer; transition: all .15s;
+  box-shadow: 0 0 24px rgba(0,229,160,0.35);
+}
+.overlay-dismiss:active { transform: scale(0.96); }
+
+/* ── BOTTOM BAR ── */
+.bottom-bar {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px;
+  padding: 12px 16px 24px;
+  background: linear-gradient(transparent, rgba(8,13,26,0.9) 35%, var(--bg) 70%);
+  display: flex; justify-content: space-between; align-items: center;
+  z-index: 10;
+}
+
+.reset-btn {
+  font-family: var(--font-d); font-size: 12px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  background: rgba(255,69,69,0.08); border: 1px solid rgba(255,69,69,0.25);
+  color: rgba(255,69,69,0.7); border-radius: 9px; padding: 8px 16px;
+  cursor: pointer; transition: all .15s;
+}
+.reset-btn:hover { border-color: rgba(255,69,69,0.4); color: var(--red); }
+
+.match-time-badge {
+  font-family: var(--font-d); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; color: var(--text3);
+  text-transform: uppercase;
+}
+
+/* ── LIVE DOT ── */
+.live-dot {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--red); margin-right: 5px; vertical-align: middle;
+  animation: blink 1s infinite;
+  box-shadow: 0 0 6px var(--red);
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* ── VIB LABEL ── */
+.vib-label { font-size: 10px; color: var(--text3); text-align: center; margin-top: 10px; letter-spacing: 0.05em; }
+
+/* ── GOAL FLASH ── */
+@keyframes goalFlash {
+  0%   { box-shadow: 0 0 40px rgba(0,229,160,0.5), var(--shadow); }
+  100% { box-shadow: var(--shadow); }
+}
+.goal-flash { animation: goalFlash 0.7s ease-out; }
+
+/* ── STATS GRID ── */
+.stats-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.stat-block {
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 10px; text-align: center;
+}
+
+/* ── SCROLLBARS ── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+
+/* ── INJURY TIME BTN ── */
+.injury-wrap { text-align: center; margin-top: 9px; }
+
+/* ── DOUBLE YELLOW WARNING ── */
+#doubleYellowWarning {
+  display: none; margin-top: 10px; padding: 9px 12px;
+  background: rgba(255,69,69,0.1); border: 1px solid rgba(255,69,69,0.3);
+  border-radius: 8px; font-size: 12px; color: var(--red);
+  font-family: var(--font-d); font-weight: 800; letter-spacing: 0.04em;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo-wrap">
+    <div class="logo-icon">
+      <img src="icon-192.png" alt="Refly">
+    </div>
+    <div>
+      <div class="logo">Refly</div>
+      <div class="logo-sub">Referee Assistant</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span id="offlineBadge" class="offline-badge">⚡ Offline</span>
+    <button id="installBtn" class="install-btn">📲 Install</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab active" onclick="showScreen('match')">Match</button>
+  <button class="tab" onclick="showScreen('setup')">Setup</button>
+  <button class="tab" onclick="showScreen('cards')">Cards</button>
+  <button class="tab" onclick="showScreen('log')">Log</button>
+</div>
+
+<!-- HALFTIME OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="overlay-icon" id="overlayIcon">⏸</div>
+  <div class="overlay-title" id="overlayTitle">Half Time</div>
+  <div class="overlay-sub" id="overlaySub">Rest — next segment ready</div>
+  <div class="overlay-score" id="overlayScore">0 – 0</div>
+  <button class="overlay-dismiss" onclick="dismissOverlay()">Continue ▶</button>
+</div>
+
+<!-- ════ MATCH SCREEN ════ -->
+<div class="screen active" id="screen-match">
+
+  <div id="matchStatusBanner" class="match-status">
+    <span class="live-dot"></span>Match in progress
+  </div>
+
+  <!-- SEGMENT PIPS -->
+  <div class="card" style="padding:12px 14px;">
+    <div class="seg-row" id="segPips"></div>
+    <div class="seg-meta">
+      <span class="seg-label" id="segLabel">Half 1 of 2</span>
+      <span id="liveDot" style="display:none;">
+        <span class="live-dot"></span>
+        <span style="font-family:var(--font-d);font-size:10px;font-weight:800;color:var(--red);letter-spacing:0.12em;">LIVE</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- SCOREBOARD -->
+  <div class="card" id="scoreCard">
+    <div class="score-grid">
+      <div class="team-col">
+        <input class="team-name-input" id="nameA" value="Home" maxlength="12" oninput="syncNames()">
+        <div class="score-display" id="scoreA">0</div>
+        <div class="score-btns">
+          <button class="score-btn plus" onclick="addGoal('A',1)">+</button>
+          <button class="score-btn minus" onclick="addGoal('A',-1)">−</button>
+        </div>
+      </div>
+      <div class="vs-col">vs</div>
+      <div class="team-col">
+        <input class="team-name-input" id="nameB" value="Away" maxlength="12" oninput="syncNames()">
+        <div class="score-display" id="scoreB">0</div>
+        <div class="score-btns">
+          <button class="score-btn plus" onclick="addGoal('B',1)">+</button>
+          <button class="score-btn minus" onclick="addGoal('B',-1)">−</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMER -->
+  <div class="card">
+    <div class="timer-wrap">
+      <div id="timerDisplay" class="timer-big">25:00</div>
+      <div id="timerSub" class="timer-sub">Half 1 · 25 min</div>
+    </div>
+    <div class="timer-controls">
+      <button class="tc-btn tc-start" id="startBtn" onclick="startTimer()">▶ Start</button>
+      <button class="tc-btn tc-pause" onclick="stopTimer()">⏸ Pause</button>
+      <button class="tc-btn tc-next" onclick="nextSegment()">⏭ Next</button>
+    </div>
+    <div class="injury-wrap">
+      <button class="tc-btn tc-added" onclick="addInjuryTime()" style="max-width:200px; font-size:11px;">
+        +⏱ Injury Time (<span id="addedDisplay">0</span>min)
+      </button>
+    </div>
+    <div class="vib-label" id="vibLabel">🔔 Vibrate on segment end: <span id="vibStatus">On</span></div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div class="card">
+    <div class="card-title">Quick Actions</div>
+    <div style="display:flex; gap:7px; flex-wrap:wrap;">
+      <button class="preset-chip" onclick="logFoul('A')">🚫 Foul – Home</button>
+      <button class="preset-chip" onclick="logFoul('B')">🚫 Foul – Away</button>
+      <button class="preset-chip" onclick="logCorner('A')">🚩 Corner – Home</button>
+      <button class="preset-chip" onclick="logCorner('B')">🚩 Corner – Away</button>
+      <button class="preset-chip" onclick="logOffside('A')">🚦 Offside – Home</button>
+      <button class="preset-chip" onclick="logOffside('B')">🚦 Offside – Away</button>
+      <button class="preset-chip" onclick="logPenalty('A')">⚡ Penalty – Home</button>
+      <button class="preset-chip" onclick="logPenalty('B')">⚡ Penalty – Away</button>
+      <button class="preset-chip" onclick="logInjury()">🩹 Injury</button>
+      <button class="preset-chip" onclick="logSubstitution()">🔄 Sub</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SETUP SCREEN ════ -->
+<div class="screen" id="screen-setup">
+
+  <div class="card">
+    <div class="card-title">Age Group Presets</div>
+    <div class="preset-scroll" id="presetScroll">
+      <button class="preset-chip" onclick="applyPreset('u6')">U6</button>
+      <button class="preset-chip" onclick="applyPreset('u7')">U7</button>
+      <button class="preset-chip" onclick="applyPreset('u8')">U8</button>
+      <button class="preset-chip" onclick="applyPreset('u9')">U9</button>
+      <button class="preset-chip" onclick="applyPreset('u10')">U10</button>
+      <button class="preset-chip" onclick="applyPreset('u11')">U11/12</button>
+      <button class="preset-chip" onclick="applyPreset('u13')">U13/14</button>
+      <button class="preset-chip" onclick="applyPreset('u15')">U15/16</button>
+      <button class="preset-chip" onclick="applyPreset('u17')">U17+</button>
+      <button class="preset-chip" onclick="applyPreset('adult')">Adult 11v11</button>
+      <button class="preset-chip" onclick="applyPreset('futsal')">Futsal</button>
+      <button class="preset-chip" onclick="applyPreset('7aside')">7-a-Side</button>
+      <button class="preset-chip" onclick="applyPreset('5aside')">5-a-Side</button>
+    </div>
+    <div id="presetDesc" style="font-size:12px;color:var(--text3);margin-top:10px;line-height:1.6;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Match Settings</div>
+    <div class="settings-grid">
+      <div class="setting-row">
+        <div class="setting-label">Segments</div>
+        <div class="setting-val">
+          <input type="number" id="setNumSegs" value="2" min="1" max="8" onchange="onSettingChange()">
+          <span class="unit" id="setSegName">halves</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">Minutes each</div>
+        <div class="setting-val">
+          <input type="number" id="setSegDur" value="25" min="2" max="60" onchange="onSettingChange()">
+          <span class="unit">min</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">Segment type</div>
+        <div class="setting-val">
+          <select id="setSegType" onchange="onSegTypeChange()">
+            <option value="halves">Halves</option>
+            <option value="quarters">Quarters</option>
+            <option value="thirds">Thirds</option>
+            <option value="periods">Periods</option>
+          </select>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">Injury time</div>
+        <div class="setting-val">
+          <input type="number" id="setAddedTime" value="0" min="0" max="20" onchange="onSettingChange()">
+          <span class="unit">min</span>
+        </div>
+      </div>
+      <div class="setting-row full">
+        <div class="setting-label">Count direction</div>
+        <div class="setting-val">
+          <select id="setDirection" onchange="onSettingChange()">
+            <option value="down">Count down ⏳</option>
+            <option value="up">Count up ⏱</option>
+          </select>
+        </div>
+      </div>
+      <div class="setting-row full">
+        <div class="setting-label">Format</div>
+        <div class="setting-val">
+          <select id="setFormat" onchange="onSettingChange()">
+            <option value="11">11-a-side</option>
+            <option value="9">9-a-side</option>
+            <option value="7">7-a-side</option>
+            <option value="5">5-a-side</option>
+            <option value="futsal">Futsal</option>
+            <option value="other">Other / Custom</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Alerts & Notifications</div>
+    <div class="notif-row">
+      <div><div class="notif-label">🔔 Segment end alert</div><div class="notif-sub">Notification + vibrate when segment ends</div></div>
+      <label class="toggle-wrap"><input type="checkbox" id="togSegEnd" checked onchange="saveSettings()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div class="notif-row">
+      <div><div class="notif-label">📳 Vibration</div><div class="notif-sub">Vibrate phone at key moments</div></div>
+      <label class="toggle-wrap"><input type="checkbox" id="togVibrate" checked onchange="saveSettings()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div class="notif-row">
+      <div><div class="notif-label">⚠️ 5-min warning</div><div class="notif-sub">Alert 5 minutes before end of segment</div></div>
+      <label class="toggle-wrap"><input type="checkbox" id="tog5min" checked onchange="saveSettings()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div class="notif-row">
+      <div><div class="notif-label">⚽ Goal notification</div><div class="notif-sub">Pop-up on each goal</div></div>
+      <label class="toggle-wrap"><input type="checkbox" id="togGoal" onchange="saveSettings()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div class="notif-row">
+      <div><div class="notif-label">🟨 Card alert</div><div class="notif-sub">Notification when card is issued</div></div>
+      <label class="toggle-wrap"><input type="checkbox" id="togCard" onchange="saveSettings()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div class="notif-row">
+      <div><div class="notif-label">🔕 Screen always on</div><div class="notif-sub">Prevent screen sleep while refereeing</div></div>
+      <label class="toggle-wrap"><input type="checkbox" id="togWakeLock" onchange="toggleWakeLock()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="preset-chip" onclick="requestNotifPermission()" style="width:100%; text-align:center;">Enable Browser Notifications</button>
+      <div id="notifStatus" style="font-size:11px;color:var(--text3);margin-top:6px;text-align:center;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Team Names</div>
+    <div style="display:flex; gap:8px;">
+      <div style="flex:1;">
+        <div class="setting-label" style="margin-bottom:4px;">Home</div>
+        <input type="text" id="setupNameA" value="Home" maxlength="20"
+          style="width:100%;font-family:var(--font-b);font-size:14px;background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--text);border-radius:9px;padding:9px 10px;outline:none;transition:border-color .2s;"
+          oninput="syncSetupNames()" onfocus="this.style.borderColor='rgba(0,229,160,0.4)'" onblur="this.style.borderColor=''">
+      </div>
+      <div style="flex:1;">
+        <div class="setting-label" style="margin-bottom:4px;">Away</div>
+        <input type="text" id="setupNameB" value="Away" maxlength="20"
+          style="width:100%;font-family:var(--font-b);font-size:14px;background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--text);border-radius:9px;padding:9px 10px;outline:none;transition:border-color .2s;"
+          oninput="syncSetupNames()" onfocus="this.style.borderColor='rgba(0,229,160,0.4)'" onblur="this.style.borderColor=''">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Offline / App Status</div>
+    <div id="pwaStatus" style="font-size:12px;color:var(--text2);line-height:1.9;"></div>
+  </div>
+</div>
+
+<!-- ════ CARDS SCREEN ════ -->
+<div class="screen" id="screen-cards">
+  <div class="card">
+    <div class="card-title">Discipline</div>
+    <div class="cards-grid">
+      <div>
+        <div class="team-cards-name" id="cardNameA">Home</div>
+        <div class="card-action-btns">
+          <button class="card-action-btn btn-yellow" onclick="addCard('A','yellow')">🟨<span style="font-size:9px;">YEL</span></button>
+          <button class="card-action-btn btn-red" onclick="addCard('A','red')">🟥<span style="font-size:9px;">RED</span></button>
+        </div>
+        <div class="card-action-btns">
+          <button class="card-action-btn btn-blue-c" onclick="addCard('A','blue')" id="blueA" style="display:none;">🟦<span style="font-size:9px;">BLUE</span></button>
+        </div>
+        <div class="card-tallies">
+          <div class="card-tally"><div class="num" id="yellowA">0</div><div class="lbl">Yellow</div></div>
+          <div class="card-tally"><div class="num" id="redA">0</div><div class="lbl">Red</div></div>
+          <div class="card-tally" id="blueCountA" style="display:none;"><div class="num" id="blueACount">0</div><div class="lbl">Blue</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="team-cards-name" id="cardNameB">Away</div>
+        <div class="card-action-btns">
+          <button class="card-action-btn btn-yellow" onclick="addCard('B','yellow')">🟨<span style="font-size:9px;">YEL</span></button>
+          <button class="card-action-btn btn-red" onclick="addCard('B','red')">🟥<span style="font-size:9px;">RED</span></button>
+        </div>
+        <div class="card-action-btns">
+          <button class="card-action-btn btn-blue-c" onclick="addCard('B','blue')" id="blueB" style="display:none;">🟦<span style="font-size:9px;">BLUE</span></button>
+        </div>
+        <div class="card-tallies">
+          <div class="card-tally"><div class="num" id="yellowB">0</div><div class="lbl">Yellow</div></div>
+          <div class="card-tally"><div class="num" id="redB">0</div><div class="lbl">Red</div></div>
+          <div class="card-tally" id="blueCountB" style="display:none;"><div class="num" id="blueBCount">0</div><div class="lbl">Blue</div></div>
+        </div>
+      </div>
+    </div>
+    <div id="doubleYellowWarning"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Card Options</div>
+    <div class="notif-row">
+      <div><div class="notif-label">🟦 Blue card (sin bin)</div><div class="notif-sub">Enable for FA pilot / futsal formats</div></div>
+      <label class="toggle-wrap"><input type="checkbox" id="togBlueCard" onchange="toggleBlueCard()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div class="notif-row">
+      <div><div class="notif-label">⚠️ 2 yellows = red warning</div><div class="notif-sub">Alert when player reaches 2 yellows</div></div>
+      <label class="toggle-wrap"><input type="checkbox" id="tog2yr" checked onchange="saveSettings()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+  </div>
+</div>
+
+<!-- ════ LOG SCREEN ════ -->
+<div class="screen" id="screen-log">
+  <div class="card">
+    <div class="card-title">Match Log</div>
+    <div class="log-list" id="eventLog">
+      <div class="log-empty">No events yet — start the match!</div>
+    </div>
+    <div class="log-actions">
+      <button class="log-act-btn" onclick="shareLog()">📤 Share</button>
+      <button class="log-act-btn" onclick="clearLog()">🗑 Clear</button>
+    </div>
+  </div>
+
+  <div class="card" id="summaryCard" style="display:none;">
+    <div class="card-title">Full Time Summary</div>
+    <div id="summaryContent" style="font-size:13px;color:var(--text2);line-height:2;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Stats Counter</div>
+    <div class="stats-4">
+      <div class="stat-block">
+        <div class="setting-label">Fouls – Home</div>
+        <div class="score-display" id="foulsA" style="font-size:38px;margin:4px 0;">0</div>
+        <div class="score-btns" style="justify-content:center;">
+          <button class="score-btn plus" style="width:34px;height:34px;font-size:18px;" onclick="incStat('foulsA')">+</button>
+          <button class="score-btn minus" style="width:34px;height:34px;font-size:18px;" onclick="decStat('foulsA')">−</button>
+        </div>
+      </div>
+      <div class="stat-block">
+        <div class="setting-label">Fouls – Away</div>
+        <div class="score-display" id="foulsB" style="font-size:38px;margin:4px 0;">0</div>
+        <div class="score-btns" style="justify-content:center;">
+          <button class="score-btn plus" style="width:34px;height:34px;font-size:18px;" onclick="incStat('foulsB')">+</button>
+          <button class="score-btn minus" style="width:34px;height:34px;font-size:18px;" onclick="decStat('foulsB')">−</button>
+        </div>
+      </div>
+      <div class="stat-block">
+        <div class="setting-label">Corners – Home</div>
+        <div class="score-display" id="cornersA" style="font-size:38px;margin:4px 0;">0</div>
+        <div class="score-btns" style="justify-content:center;">
+          <button class="score-btn plus" style="width:34px;height:34px;font-size:18px;" onclick="incStat('cornersA')">+</button>
+          <button class="score-btn minus" style="width:34px;height:34px;font-size:18px;" onclick="decStat('cornersA')">−</button>
+        </div>
+      </div>
+      <div class="stat-block">
+        <div class="setting-label">Corners – Away</div>
+        <div class="score-display" id="cornersB" style="font-size:38px;margin:4px 0;">0</div>
+        <div class="score-btns" style="justify-content:center;">
+          <button class="score-btn plus" style="width:34px;height:34px;font-size:18px;" onclick="incStat('cornersB')">+</button>
+          <button class="score-btn minus" style="width:34px;height:34px;font-size:18px;" onclick="decStat('cornersB')">−</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <button class="reset-btn" onclick="confirmReset()">⟳ Reset</button>
+  <div class="match-time-badge" id="matchTimeBadge">00:00 elapsed</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let state = {
+  scoreA: 0, scoreB: 0,
+  yellowA: 0, redA: 0, blueA: 0,
+  yellowB: 0, redB: 0, blueB: 0,
+  foulsA: 0, foulsB: 0,
+  cornersA: 0, cornersB: 0,
+  currentSeg: 1, totalSegs: 2,
+  segDuration: 25 * 60,
+  addedTime: 0,
+  timeLeft: 25 * 60,
+  running: false,
+  countUp: false,
+  matchElapsed: 0,
+  matchStarted: false,
+  matchOver: false,
+  events: []
+};
+let timerInterval = null;
+let elapsedInterval = null;
+let notifPermission = typeof Notification !== 'undefined' ? Notification.permission : 'denied';
+let wakeLock = null;
+let deferredInstall = null;
+
+// ═══════════════════════════════════════════════
+// PRESETS
+// ═══════════════════════════════════════════════
+const PRESETS = {
+  u6:     { segs:2, dur:10, type:'halves', format:'5',   desc:'U6 · 5v5 · 2×10 min halves · No heading · Shared roll-on subs' },
+  u7:     { segs:2, dur:10, type:'halves', format:'5',   desc:'U7 · 5v5 · 2×10 min halves · Fun, development focus' },
+  u8:     { segs:2, dur:15, type:'halves', format:'5',   desc:'U8 · 5v5 · 2×15 min halves · No heading' },
+  u9:     { segs:2, dur:20, type:'halves', format:'7',   desc:'U9 · 7v7 · 2×20 min halves' },
+  u10:    { segs:2, dur:25, type:'halves', format:'7',   desc:'U10 · 7v7 · 2×25 min halves' },
+  u11:    { segs:2, dur:30, type:'halves', format:'9',   desc:'U11/12 · 9v9 · 2×30 min halves' },
+  u13:    { segs:2, dur:35, type:'halves', format:'11',  desc:'U13/14 · 11v11 · 2×35 min halves' },
+  u15:    { segs:2, dur:40, type:'halves', format:'11',  desc:'U15/16 · 11v11 · 2×40 min halves' },
+  u17:    { segs:2, dur:45, type:'halves', format:'11',  desc:'U17+ · 11v11 · 2×45 min halves' },
+  adult:  { segs:2, dur:45, type:'halves', format:'11',  desc:'Adult 11-a-side · 2×45 min halves · Standard FA rules' },
+  futsal: { segs:2, dur:20, type:'halves', format:'futsal', desc:'Futsal · 5v5 · 2×20 min halves · Running clock' },
+  '7aside': { segs:2, dur:35, type:'halves', format:'7', desc:'7-a-Side · 2×35 min halves · Popular amateur format' },
+  '5aside': { segs:2, dur:20, type:'quarters', format:'5', desc:'5-a-Side · 4×20 min quarters · Rolling subs' }
+};
+
+function applyPreset(key) {
+  const p = PRESETS[key];
+  if (!p) return;
+  document.getElementById('setNumSegs').value = p.segs;
+  document.getElementById('setSegDur').value = p.dur;
+  document.getElementById('setSegType').value = p.type;
+  document.getElementById('setAddedTime').value = 0;
+  document.getElementById('setFormat').value = p.format;
+  document.querySelectorAll('#presetScroll .preset-chip').forEach(c => c.classList.remove('selected'));
+  event.target.classList.add('selected');
+  document.getElementById('presetDesc').textContent = p.desc;
+  onSettingChange();
+}
+
+// ═══════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════
+function onSettingChange() {
+  if (state.running) stopTimer();
+  const n   = parseInt(document.getElementById('setNumSegs').value) || 2;
+  const dur = parseInt(document.getElementById('setSegDur').value) || 25;
+  const add = parseInt(document.getElementById('setAddedTime').value) || 0;
+  const dir = document.getElementById('setDirection').value;
+  state.totalSegs   = Math.min(8, Math.max(1, n));
+  state.segDuration = dur * 60;
+  state.addedTime   = add * 60;
+  state.countUp     = (dir === 'up');
+  state.timeLeft    = state.countUp ? 0 : state.segDuration;
+  state.currentSeg  = 1;
+  state.running     = false;
+  saveSettings();
+  renderAll();
+}
+
+function onSegTypeChange() {
+  const t = document.getElementById('setSegType').value;
+  const nameMap = { halves: 'halves', quarters: 'quarters', thirds: 'thirds', periods: 'periods' };
+  document.getElementById('setSegName').textContent = nameMap[t] || 'segments';
+  onSettingChange();
+}
+
+function segTypeName() {
+  const t = document.getElementById('setSegType') ? document.getElementById('setSegType').value : 'halves';
+  const singular = { halves:'Half', quarters:'Quarter', thirds:'Third', periods:'Period' };
+  return singular[t] || 'Seg';
+}
+
+// ═══════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════
+function startTimer() {
+  if (state.running) return;
+  state.running = true;
+  state.matchStarted = true;
+  document.getElementById('startBtn').textContent = '▶ Running';
+  document.getElementById('liveDot').style.display = 'inline';
+  document.getElementById('matchStatusBanner').classList.add('show');
+
+  timerInterval = setInterval(() => {
+    if (state.countUp) {
+      state.timeLeft++;
+      const totalSeg = state.segDuration + state.addedTime;
+      if (state.timeLeft >= totalSeg) { state.timeLeft = totalSeg; onSegmentEnd(); }
+      if (document.getElementById('tog5min').checked) {
+        const remaining = totalSeg - state.timeLeft;
+        if (remaining === 300) { doNotif('⚠️ 5 minutes left', segTypeName()+' '+state.currentSeg+' — 5 min remaining'); doVibrate([200,100,200]); }
+      }
+    } else {
+      if (state.timeLeft > 0) {
+        state.timeLeft--;
+        if (document.getElementById('tog5min').checked && state.timeLeft === 300) {
+          doNotif('⚠️ 5 minutes left', segTypeName()+' '+state.currentSeg+' — 5 min remaining');
+          doVibrate([200,100,200]);
+        }
+        if (state.timeLeft === 0) onSegmentEnd();
+      }
+    }
+    renderTimer();
+  }, 1000);
+
+  if (!elapsedInterval) {
+    elapsedInterval = setInterval(() => {
+      if (state.running) {
+        state.matchElapsed++;
+        document.getElementById('matchTimeBadge').textContent = fmt(state.matchElapsed) + ' elapsed';
+      }
+    }, 1000);
+  }
+}
+
+function stopTimer() {
+  state.running = false;
+  clearInterval(timerInterval); timerInterval = null;
+  document.getElementById('startBtn').textContent = '▶ Start';
+  document.getElementById('liveDot').style.display = 'none';
+}
+
+function onSegmentEnd() {
+  stopTimer();
+  const sn = segTypeName();
+  logEvent('🔔 End of ' + sn + ' ' + state.currentSeg);
+  if (document.getElementById('togSegEnd').checked) {
+    doNotif('🔔 ' + sn + ' ' + state.currentSeg + ' Over!', 'Score: ' + nameA() + ' ' + state.scoreA + ' – ' + state.scoreB + ' ' + nameB());
+    doVibrate([500, 200, 500, 200, 500]);
+  }
+  if (state.currentSeg < state.totalSegs) {
+    showOverlay(sn + ' Time', sn + ' ' + state.currentSeg + ' complete', false);
+  } else {
+    showOverlay('Full Time', 'Match Complete', true);
+    buildSummary();
+  }
+}
+
+function nextSegment() {
+  stopTimer();
+  if (state.currentSeg < state.totalSegs) {
+    state.currentSeg++;
+    state.timeLeft = state.countUp ? 0 : state.segDuration;
+    logEvent('▶ ' + segTypeName() + ' ' + state.currentSeg + ' started');
+    renderAll();
+  } else {
+    onSegmentEnd();
+  }
+}
+
+function addInjuryTime() {
+  const add = parseInt(document.getElementById('setAddedTime').value) || 0;
+  if (add <= 0) { alert('Set injury time minutes in Setup first.'); return; }
+  if (!state.countUp) state.timeLeft += add * 60;
+  logEvent('⏱ +' + add + ' injury time added');
+  renderTimer();
+}
+
+// ═══════════════════════════════════════════════
+// SCORE
+// ═══════════════════════════════════════════════
+function addGoal(team, delta) {
+  if (team==='A') state.scoreA = Math.max(0, state.scoreA + delta);
+  else            state.scoreB = Math.max(0, state.scoreB + delta);
+  if (delta > 0) {
+    logEvent('⚽ Goal! ' + (team==='A'?nameA():nameB()) + ' — Score: ' + state.scoreA + '–' + state.scoreB);
+    bumpScore(team);
+    if (document.getElementById('togGoal').checked) {
+      doNotif('⚽ Goal!', (team==='A'?nameA():nameB()) + ' score! ' + state.scoreA + ' – ' + state.scoreB);
+    }
+    doVibrate([300]);
+  } else {
+    logEvent('✏️ Score corrected');
+  }
+  renderAll();
+}
+
+function bumpScore(team) {
+  const el = document.getElementById('score'+team);
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  const card = document.getElementById('scoreCard');
+  card.classList.remove('goal-flash'); void card.offsetWidth; card.classList.add('goal-flash');
+  setTimeout(() => el.classList.remove('bump'), 200);
+}
+
+// ═══════════════════════════════════════════════
+// CARDS
+// ═══════════════════════════════════════════════
+function addCard(team, colour) {
+  const n = team==='A' ? nameA() : nameB();
+  if (team==='A') {
+    if (colour==='yellow') state.yellowA++;
+    else if (colour==='red') state.redA++;
+    else if (colour==='blue') state.blueA++;
+  } else {
+    if (colour==='yellow') state.yellowB++;
+    else if (colour==='red') state.redB++;
+    else if (colour==='blue') state.blueB++;
+  }
+  const emoji = {yellow:'🟨', red:'🟥', blue:'🟦'}[colour] || '🃏';
+  logEvent(emoji + ' ' + colour.charAt(0).toUpperCase()+colour.slice(1) + ' card — ' + n);
+  if (document.getElementById('togCard').checked) doNotif(emoji + ' Card issued', colour + ' card — ' + n);
+  doVibrate([150, 100, 150]);
+  if (document.getElementById('tog2yr').checked) {
+    const yA = state.yellowA, yB = state.yellowB;
+    const warn = document.getElementById('doubleYellowWarning');
+    const msgs = [];
+    if (yA >= 2) msgs.push(nameA() + ' have ' + yA + ' yellows');
+    if (yB >= 2) msgs.push(nameB() + ' have ' + yB + ' yellows');
+    if (msgs.length) {
+      warn.style.display = 'block';
+      warn.textContent = '⚠️ Warning: ' + msgs.join(' · ') + ' — check player yellows';
+    } else {
+      warn.style.display = 'none';
+    }
+  }
+  renderAll();
+}
+
+function toggleBlueCard() {
+  const on = document.getElementById('togBlueCard').checked;
+  ['blueA','blueB'].forEach(id => document.getElementById(id).style.display = on?'flex':'none');
+  ['blueCountA','blueCountB'].forEach(id => document.getElementById(id).style.display = on?'block':'none');
+  saveSettings();
+}
+
+// ═══════════════════════════════════════════════
+// QUICK ACTIONS
+// ═══════════════════════════════════════════════
+function logFoul(team)     { incStat('fouls'+team); logEvent('🚫 Foul — '+(team==='A'?nameA():nameB())); renderStats(); }
+function logCorner(team)   { incStat('corners'+team); logEvent('🚩 Corner — '+(team==='A'?nameA():nameB())); renderStats(); }
+function logOffside(team)  { logEvent('🚦 Offside — '+(team==='A'?nameA():nameB())); }
+function logPenalty(team)  { logEvent('⚡ Penalty awarded — '+(team==='A'?nameA():nameB())); doVibrate([200,100,200]); }
+function logInjury()       { logEvent('🩹 Injury stoppage'); doVibrate([100]); }
+function logSubstitution() { logEvent('🔄 Substitution'); }
+
+// ═══════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════
+function incStat(id) { state[id] = (state[id]||0)+1; renderStats(); }
+function decStat(id) { state[id] = Math.max(0,(state[id]||0)-1); renderStats(); }
+
+function renderStats() {
+  ['foulsA','foulsB','cornersA','cornersB'].forEach(k => {
+    const el = document.getElementById(k);
+    if (el) el.textContent = state[k] || 0;
+  });
+}
+
+// ═══════════════════════════════════════════════
+// LOG
+// ═══════════════════════════════════════════════
+function logEvent(text) {
+  const sn = segTypeName();
+  const timeLabel = sn[0] + state.currentSeg + ' ' + fmtTimer();
+  state.events.unshift({ time: timeLabel, text });
+  renderLog();
+  saveSettings();
+}
+
+function renderLog() {
+  const log = document.getElementById('eventLog');
+  if (!state.events.length) {
+    log.innerHTML = '<div class="log-empty">No events yet — start the match!</div>';
+    return;
+  }
+  log.innerHTML = state.events.map(e =>
+    '<div class="log-item"><span class="log-time">'+e.time+'</span><span class="log-text">'+e.text+'</span></div>'
+  ).join('');
+}
+
+function clearLog() {
+  if (!confirm('Clear the match log?')) return;
+  state.events = [];
+  renderLog();
+}
+
+function shareLog() {
+  const text = 'Refly Match Report\n'
+    + nameA() + ' ' + state.scoreA + ' – ' + state.scoreB + ' ' + nameB() + '\n\n'
+    + state.events.map(e => '['+e.time+'] '+e.text).join('\n');
+  if (navigator.share) {
+    navigator.share({ title: 'Refly Match Report', text });
+  } else {
+    navigator.clipboard ? navigator.clipboard.writeText(text).then(()=>alert('Copied!')) : alert(text);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════
+function renderPips() {
+  const cont = document.getElementById('segPips');
+  cont.innerHTML = '';
+  for (let i = 1; i <= state.totalSegs; i++) {
+    const d = document.createElement('div');
+    d.className = 'seg-pip';
+    if (i < state.currentSeg) d.classList.add('done');
+    if (i === state.currentSeg) d.classList.add('active');
+    cont.appendChild(d);
+  }
+  const sn = segTypeName();
+  document.getElementById('segLabel').textContent = sn + ' ' + state.currentSeg + ' of ' + state.totalSegs;
+}
+
+function renderTimer() {
+  const el = document.getElementById('timerDisplay');
+  el.textContent = fmtTimer();
+  el.className = 'timer-big';
+  if (!state.countUp) {
+    if (state.timeLeft <= 60) el.classList.add('overtime');
+    else if (state.timeLeft <= 300) el.classList.add('warning');
+  } else {
+    const rem = state.segDuration - state.timeLeft;
+    if (rem >= 0 && rem <= 60) el.classList.add('overtime');
+    else if (rem >= 0 && rem <= 300) el.classList.add('warning');
+  }
+  const sn = segTypeName();
+  const dur = Math.round(state.segDuration/60);
+  document.getElementById('timerSub').textContent = sn + ' ' + state.currentSeg + ' · ' + dur + ' min';
+  document.getElementById('addedDisplay').textContent = Math.round(state.addedTime/60);
+}
+
+function renderAll() {
+  document.getElementById('scoreA').textContent = state.scoreA;
+  document.getElementById('scoreB').textContent = state.scoreB;
+  document.getElementById('yellowA').textContent = state.yellowA;
+  document.getElementById('redA').textContent    = state.redA;
+  document.getElementById('yellowB').textContent = state.yellowB;
+  document.getElementById('redB').textContent    = state.redB;
+  document.getElementById('blueACount').textContent = state.blueA;
+  document.getElementById('blueBCount').textContent = state.blueB;
+  renderTimer();
+  renderPips();
+  renderLog();
+  renderStats();
+  syncNames();
+  updatePWAStatus();
+}
+
+function fmtTimer() { return fmt(state.timeLeft); }
+function fmt(secs) {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+// ═══════════════════════════════════════════════
+// NAMES
+// ═══════════════════════════════════════════════
+function nameA() { return document.getElementById('nameA').value.trim() || 'Home'; }
+function nameB() { return document.getElementById('nameB').value.trim() || 'Away'; }
+
+function syncNames() {
+  const a = nameA(), b = nameB();
+  document.getElementById('cardNameA').textContent = a;
+  document.getElementById('cardNameB').textContent = b;
+  const snA = document.getElementById('setupNameA');
+  const snB = document.getElementById('setupNameB');
+  if (snA && snA !== document.activeElement) snA.value = a;
+  if (snB && snB !== document.activeElement) snB.value = b;
+}
+
+function syncSetupNames() {
+  document.getElementById('nameA').value = document.getElementById('setupNameA').value;
+  document.getElementById('nameB').value = document.getElementById('setupNameB').value;
+  syncNames();
+}
+
+// ═══════════════════════════════════════════════
+// OVERLAY
+// ═══════════════════════════════════════════════
+function showOverlay(title, sub, isFull) {
+  document.getElementById('overlayTitle').textContent = title;
+  document.getElementById('overlaySub').textContent = sub;
+  document.getElementById('overlayScore').textContent = state.scoreA + ' – ' + state.scoreB;
+  document.getElementById('overlayIcon').textContent = isFull ? '🏁' : '⏸';
+  document.getElementById('overlay').classList.add('show');
+  doVibrate(isFull ? [1000,200,1000] : [600]);
+}
+
+function dismissOverlay() {
+  document.getElementById('overlay').classList.remove('show');
+  if (state.currentSeg <= state.totalSegs && !state.matchOver) {
+    state.timeLeft = state.countUp ? 0 : state.segDuration;
+    renderAll();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// SUMMARY
+// ═══════════════════════════════════════════════
+function buildSummary() {
+  state.matchOver = true;
+  const card = document.getElementById('summaryCard');
+  const content = document.getElementById('summaryContent');
+  card.style.display = 'block';
+  const winner = state.scoreA > state.scoreB ? nameA() : state.scoreB > state.scoreA ? nameB() : null;
+  content.innerHTML = `
+    <strong style="color:var(--green)">${nameA()} ${state.scoreA} – ${state.scoreB} ${nameB()}</strong><br>
+    ${winner ? '🏆 Winner: <strong>'+winner+'</strong>' : '🤝 Draw'}<br><br>
+    ${nameA()} · 🟨 ${state.yellowA} yellow · 🟥 ${state.redA} red · 🚫 ${state.foulsA||0} fouls<br>
+    ${nameB()} · 🟨 ${state.yellowB} yellow · 🟥 ${state.redB} red · 🚫 ${state.foulsB||0} fouls<br><br>
+    Match duration: ${fmt(state.matchElapsed)}<br>
+    Events logged: ${state.events.length}
+  `;
+  showScreen('log');
+}
+
+// ═══════════════════════════════════════════════
+// NOTIFICATIONS & VIBRATION
+// ═══════════════════════════════════════════════
+function doNotif(title, body) {
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    new Notification(title, { body, icon: 'icon-192.png' });
+  }
+}
+
+function doVibrate(pattern) {
+  if (document.getElementById('togVibrate') && document.getElementById('togVibrate').checked) {
+    if ('vibrate' in navigator) navigator.vibrate(pattern);
+  }
+}
+
+function requestNotifPermission() {
+  if (typeof Notification === 'undefined') {
+    document.getElementById('notifStatus').textContent = '❌ Not supported in this browser';
+    return;
+  }
+  Notification.requestPermission().then(p => {
+    notifPermission = p;
+    document.getElementById('notifStatus').textContent =
+      p === 'granted' ? '✅ Notifications enabled' :
+      p === 'denied'  ? '❌ Denied — check browser settings' : '⚠️ Not yet granted';
+  });
+}
+
+// ═══════════════════════════════════════════════
+// WAKE LOCK
+// ═══════════════════════════════════════════════
+async function toggleWakeLock() {
+  const want = document.getElementById('togWakeLock').checked;
+  if (want) {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        document.getElementById('vibLabel').textContent = '🔆 Screen lock ON — screen will stay awake';
+      }
+    } catch(e) { document.getElementById('togWakeLock').checked = false; }
+  } else {
+    if (wakeLock) { await wakeLock.release(); wakeLock = null; }
+    document.getElementById('vibLabel').textContent = '🔔 Vibrate on segment end: ' + (document.getElementById('togVibrate').checked ? 'On' : 'Off');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════
+function confirmReset() {
+  if (!confirm('Reset the entire match?')) return;
+  stopTimer();
+  clearInterval(elapsedInterval); elapsedInterval = null;
+  Object.assign(state, {
+    scoreA:0, scoreB:0,
+    yellowA:0, redA:0, blueA:0,
+    yellowB:0, redB:0, blueB:0,
+    foulsA:0, foulsB:0, cornersA:0, cornersB:0,
+    currentSeg:1, matchElapsed:0, matchStarted:false, matchOver:false,
+    timeLeft: state.countUp ? 0 : state.segDuration,
+    events: []
+  });
+  document.getElementById('doubleYellowWarning').style.display='none';
+  document.getElementById('summaryCard').style.display='none';
+  document.getElementById('matchStatusBanner').classList.remove('show');
+  document.getElementById('liveDot').style.display='none';
+  document.getElementById('startBtn').textContent='▶ Start';
+  document.getElementById('matchTimeBadge').textContent='00:00 elapsed';
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════
+// SCREENS
+// ═══════════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  const tabs = ['match','setup','cards','log'];
+  document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+// PERSIST
+// ═══════════════════════════════════════════════
+function saveSettings() {
+  try {
+    const save = {
+      scoreA: state.scoreA, scoreB: state.scoreB,
+      yellowA: state.yellowA, redA: state.redA, blueA: state.blueA,
+      yellowB: state.yellowB, redB: state.redB, blueB: state.blueB,
+      foulsA: state.foulsA, foulsB: state.foulsB,
+      cornersA: state.cornersA, cornersB: state.cornersB,
+      currentSeg: state.currentSeg, totalSegs: state.totalSegs,
+      segDuration: state.segDuration, addedTime: state.addedTime,
+      timeLeft: state.timeLeft, countUp: state.countUp,
+      matchElapsed: state.matchElapsed,
+      nameA: nameA(), nameB: nameB(),
+      events: state.events.slice(0, 100)
+    };
+    localStorage.setItem('refly_state', JSON.stringify(save));
+  } catch(e) {}
+}
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem('refly_state');
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    Object.assign(state, s);
+    if (s.nameA) { document.getElementById('nameA').value = s.nameA; document.getElementById('setupNameA').value = s.nameA; }
+    if (s.nameB) { document.getElementById('nameB').value = s.nameB; document.getElementById('setupNameB').value = s.nameB; }
+    document.getElementById('setNumSegs').value = state.totalSegs;
+    document.getElementById('setSegDur').value  = Math.round(state.segDuration/60);
+    document.getElementById('setDirection').value = state.countUp ? 'up' : 'down';
+    document.getElementById('setAddedTime').value = Math.round(state.addedTime/60);
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════
+// PWA
+// ═══════════════════════════════════════════════
+function updatePWAStatus() {
+  const el = document.getElementById('pwaStatus');
+  if (!el) return;
+  const sw  = 'serviceWorker' in navigator ? '✅' : '❌';
+  const nl  = typeof Notification!=='undefined' ? (Notification.permission==='granted'?'✅':'⚠️') : '❌';
+  const vib = 'vibrate' in navigator ? '✅' : '❌';
+  const wl  = 'wakeLock' in navigator ? '✅' : '❌';
+  const online = navigator.onLine ? '🟢 Online' : '🔴 Offline (cached)';
+  el.innerHTML = `Network: ${online}<br>Service Worker (offline): ${sw}<br>Notifications: ${nl} (${typeof Notification!=='undefined'?Notification.permission:'n/a'})<br>Vibration: ${vib}<br>Screen Wake Lock: ${wl}<br>Data saved locally: ✅`;
+}
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredInstall = e;
+  document.getElementById('installBtn').style.display = 'block';
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  const res = await deferredInstall.userChoice;
+  if (res.outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
+  deferredInstall = null;
+});
+
+function checkOnline() {
+  document.getElementById('offlineBadge').style.display = navigator.onLine ? 'none' : 'block';
+  updatePWAStatus();
+}
+window.addEventListener('online', checkOnline);
+window.addEventListener('offline', checkOnline);
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+
+// INIT
+loadSettings();
+renderAll();
+checkOnline();
+document.getElementById('vibStatus').textContent = document.getElementById('togVibrate').checked ? 'On' : 'Off';
+</script>
+</body>
+</html>
